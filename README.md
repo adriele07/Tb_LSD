@@ -205,5 +205,3 @@ end process;
 ```
 
 ---
-
-Se desejar fluxogramas, diagramas ou explicações ainda mais detalhadas, basta pedir!
