@@ -205,3 +205,313 @@ end process;
 ```
 
 ---
+
+# EXPLICAÇÃO LINHA POR LINHA DOS ARQUIVOS VHDL
+
+## DrenaAgua.vhd
+
+```vhdl
+library ieee; -- Importa a biblioteca padrão IEEE
+use ieee.std_logic_1164.all; -- Importa tipos lógicos padrão
+use ieee.numeric_std.all; -- Importa tipos numéricos padrão
+
+entity DrenaAgua is -- Declara o módulo DrenaAgua
+    port(
+        estadoDeAtivacao : in std_logic; -- Entrada: ativa a drenagem
+        sensorDeNivel : in std_logic;    -- Entrada: sensor de nível de água
+        ld_agua : out std_logic          -- Saída: controla a drenagem
+    );
+end entity DrenaAgua;
+
+architecture Escoamento of DrenaAgua is -- Implementação do módulo
+
+    signal valorDoNivel : std_logic; -- Sinal interno para o nível
+
+begin
+
+    valorDoNivel <= sensorDeNivel; -- Atribui o valor do sensor ao sinal interno
+
+    process( estadoDeAtivacao, valorDoNivel )
+    begin
+        if( estadoDeAtivacao = '1' ) then -- Se ativado
+            if( valorDoNivel = '1' ) then -- Se ainda há água
+                ld_agua <= '0';           -- Não drena
+            else
+                ld_agua <= '1';           -- Drena
+            end if;
+        else
+            ld_agua <= '0';               -- Não drena se não ativado
+        end if;
+    end process;
+
+end architecture Escoamento;
+```
+
+---
+
+## Display.vhd
+
+```vhdl
+library ieee; -- Importa biblioteca padrão
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity Display is
+    port(
+        estado: in std_logic_vector( 3 downto 0 ); -- Entrada: estado da FSM
+        display: out std_logic_vector( 6 downto 0 ) -- Saída: display 7 segmentos
+    );
+end entity Display;
+
+architecture SeteSegmentos of Display is
+begin
+    process( estado )
+    begin
+        case estado is
+            when "0000" => display <= "1000000"; -- Estado 0
+            when "0001" => display <= "1111001"; -- Estado 1
+            when "0010" => display <= "0100100"; -- Estado 2
+            when "0011" => display <= "0110000"; -- Estado 3
+            when "0100" => display <= "0011001"; -- Estado 4
+            when "0101" => display <= "0010010"; -- Estado 5
+            when "0110" => display <= "0000010"; -- Estado 6
+            when "0111" => display <= "1111000"; -- Estado 7
+            when others => display <= "1111111"; -- Desliga tudo
+        end case;
+    end process;
+end architecture SeteSegmentos;
+```
+
+---
+
+## MaquinaDeLavar.vhd (Resumo das principais seções)
+
+```vhdl
+library ieee; -- Importa biblioteca padrão
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity MaquinaDeLavar is -- Entidade principal/topo
+    port(
+        clock: in std_logic; -- Clock do sistema
+        sensorDeDistancia_1: in std_logic; -- Sensor de roupas
+        sensorDeAgua: in std_logic; -- Sensor de nível de água
+        centrifugar: in std_logic; -- Botão centrifugar
+        prox: in std_logic; -- Botão próximo
+        tampaFechada: out std_logic; -- Saída: tampa fechada
+        ld_sabao: out std_logic; -- Saída: LED sabão
+        ld_motor: out std_logic; -- Saída: LED motor
+        ld_agua: out std_logic; -- Saída: LED água
+        abrirValvulaDeAgua: out std_logic; -- Saída: válvula de água
+        segs: out std_logic_vector( 6 downto 0 ) -- Saída: display
+    );
+end entity MaquinaDeLavar;
+
+architecture Lavagem of MaquinaDeLavar is
+    -- Instanciação dos componentes (módulos)
+    -- Sinais internos para controle de estados e comunicação
+    -- Instanciação dos módulos e conexão dos sinais
+    -- FSM: processo sincrono (atualiza estado)
+    -- FSM: processo combinacional (define transições e ativa módulos)
+    -- Saídas: LEDs, display, válvulas, motor
+end architecture Lavagem;
+```
+
+---
+
+## Motor.vhd
+
+```vhdl
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity Motor is
+    port(
+        ld_motor : in std_logic;         -- Entrada: ativa o motor
+        temporizador : in std_logic;     -- Entrada: sinal do temporizador
+        fimDaOperacao : out std_logic    -- Saída: indica fim da operação
+    );
+end entity Motor;
+
+architecture Func of Motor is
+begin
+    process( ld_motor, temporizador )
+    begin
+        if ld_motor = '1' then
+            if temporizador = '1' then
+                fimDaOperacao <= '1';    -- Fim da operação
+            elsif temporizador = '0' then
+                fimDaOperacao <= '0';    -- Ainda operando
+            end if;
+        else
+            fimDaOperacao <= '0';        -- Motor desligado
+        end if;
+    end process;
+end architecture Func;
+```
+
+---
+
+## NivelRoupas.vhd
+
+```vhdl
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity NivelRoupas is
+    port(
+        sensorDeDistancia_1 : in std_logic; -- Entrada: sensor de distância
+        nivel : out std_logic               -- Saída: nível detectado
+    );
+end entity NivelRoupas;
+
+architecture Medicao of NivelRoupas is
+begin
+    process( sensorDeDistancia_1 )
+    begin
+        if( sensorDeDistancia_1 = '1' ) then
+            nivel <= '1'; -- Nível suficiente
+        else
+            nivel <= '0'; -- Nível insuficiente
+        end if;
+    end process;
+end architecture Medicao;
+```
+
+---
+
+## Temporizador.vhd
+
+```vhdl
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity Temporizador is
+    port(
+        enable : in std_logic;    -- Entrada: habilita contagem
+        reset : in std_logic;     -- Entrada: reseta contador
+        clock : in std_logic;     -- Entrada: clock
+        fim : out std_logic       -- Saída: indica fim do tempo
+    );
+end entity Temporizador;
+
+architecture Temp of Temporizador is
+begin
+    process( clock, reset )
+        variable count : natural := 0;   -- Contador interno
+        constant max : natural := 10;    -- Valor máximo
+    begin
+        if reset = '1' then
+            count := 0;
+            fim <= '0';
+        elsif rising_edge( clock ) then
+            if ( count < max ) then
+                count := count + 1;
+                fim <= '0';
+            else
+                fim <= '1'; -- Tempo esgotado
+            end if;
+        end if;
+    end process;
+end architecture Temp;
+```
+
+---
+
+## tb_MaquinaDeLavar.vhd (Testbench)
+
+```vhdl
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity tb_MaquinaDeLavar is
+end entity tb_MaquinaDeLavar;
+
+architecture teste of tb_MaquinaDeLavar is
+
+    -- Constantes de tempo
+    constant clockPeriod : time := 10 ns;
+    constant dutyCicle : real := 0.5;
+    constant offset : time := 5 ns;
+
+    -- Componente a ser testado
+    component MaquinaDeLavar
+        port(
+            clock: in std_logic;
+            sensorDeDistancia_1: in std_logic;
+            sensorDeAgua: in std_logic;
+            centrifugar: in std_logic;
+            prox: in std_logic;
+            tampaFechada: out std_logic;
+            ld_sabao: out std_logic;
+            ld_motor: out std_logic;
+            ld_agua: out std_logic;
+            abrirValvulaDeAgua: out std_logic;
+            segs: out std_logic_vector( 6 downto 0 )
+        );
+    end component MaquinaDeLavar;
+
+    -- Sinais para simulação
+    signal clock, sensorDeDistancia_1, sensorDeAgua, centrifugar, prox: std_logic := '0';
+    signal tampaFechada, ld_sabao, ld_motor, ld_agua, abrirValvulaDeAgua: std_logic := '0';
+    signal segs: std_logic_vector( 6 downto 0 ) := "0000000";
+
+begin
+
+    -- Instancia o DUT (Device Under Test)
+    instancia_teste: MaquinaDeLavar port map(
+        clock => clock,
+        sensorDeDistancia_1 => sensorDeDistancia_1,
+        sensorDeAgua => sensorDeAgua,
+        centrifugar => centrifugar,
+        prox => prox,
+        tampaFechada => tampaFechada,
+        ld_sabao => ld_sabao,
+        ld_motor => ld_motor,
+        ld_agua => ld_agua,
+        abrirValvulaDeAgua => abrirValvulaDeAgua,
+        segs => segs
+    );
+
+    -- Geração do clock
+    process is
+    begin
+        wait for offset;
+        clockLoop: loop
+            clock <= '0';
+            wait for ( clockPeriod - ( clockPeriod * dutyCicle ) );
+            clock <= '1';
+            wait for ( clockPeriod * dutyCicle );
+        end loop ClockLoop;
+    end process;
+
+    -- Sequência de estímulos
+    process is
+    begin
+        wait for offset;
+        sensorDeDistancia_1 <= '1';
+        wait for clockPeriod;
+        prox <= '1';
+        wait for clockPeriod;
+        sensorDeAgua <= '0';
+        wait for clockPeriod;
+        sensorDeAgua <= '1';
+        wait for clockPeriod;
+        sensorDeAgua <= '0';
+        wait for clockPeriod;
+        sensorDeAgua <= '1';
+        wait for clockPeriod;
+        prox <= '0';
+        -- Ativa a centrifugação após 100 ns
+        wait for 100 ns;
+        centrifugar <= '1';
+        wait for 50 ns;
+        centrifugar <= '0';
+    end process;
+
+end architecture teste;
+```
