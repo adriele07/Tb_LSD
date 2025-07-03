@@ -1,11 +1,27 @@
-# Tb_LSD
+
 # Máquina de Lavar em VHDL
+
+## Resumo Executivo
+
+Este projeto simula uma máquina de lavar automática digital, utilizando VHDL e arquitetura modular. O objetivo é demonstrar conceitos avançados de sistemas digitais, controle por FSM, integração de sensores e atuadores, e boas práticas de engenharia para sistemas embarcados. O projeto foi pensado para ser didático, robusto e próximo de aplicações industriais reais.
 
 ## Descrição Geral
 
 Este projeto implementa uma máquina de lavar automática utilizando VHDL, composta por diversos módulos que simulam as principais funções de um ciclo de lavagem real. O sistema é controlado por uma máquina de estados finitos (FSM) e pode ser sintetizado em FPGA.
 
 ## Arquitetura do Sistema
+
+O sistema é dividido em módulos independentes, cada um responsável por uma função específica. A comunicação entre eles é feita por sinais digitais, promovendo reuso e clareza. A arquitetura segue o padrão de sistemas embarcados industriais, com separação clara entre controle, atuação e interface.
+
+**Diagrama de Blocos (Descrição):**
+
+- **FSM (Controle Central):** Orquestra o ciclo de lavagem, ativando/desativando módulos conforme o estado.
+- **Sensores:** Fornecem informações de nível de água e presença de roupas.
+- **Atuadores:** Motor, válvula de água, drenagem.
+- **Temporizador:** Controla o tempo de cada etapa.
+- **Display:** Informa o estado atual ao usuário.
+
+O fluxo de dados é predominantemente do usuário/sensores para a FSM, e da FSM para os atuadores e display.
 
 - **MaquinaDeLavar.vhd**: Módulo principal/topo, integra todos os outros módulos e implementa a FSM.
 - **AdicaoDeAgua.vhd**: Controla o enchimento de água.
@@ -16,6 +32,13 @@ Este projeto implementa uma máquina de lavar automática utilizando VHDL, compo
 - **Display.vhd**: Mostra o estado atual no display de 7 segmentos.
 
 ## Funcionamento dos Módulos
+
+## Justificativa de Projeto
+
+- **FSM (Finite State Machine):** Permite controle sequencial, seguro e previsível do ciclo de lavagem, facilitando depuração e expansão.
+- **Modularização:** Cada função (enchimento, drenagem, motor, etc) é isolada, facilitando manutenção e testes.
+- **Sensores Digitais:** Simplicidade e confiabilidade para prototipagem e simulação.
+- **Display de 7 segmentos:** Interface amigável e de fácil implementação em FPGA.
 
 ### MaquinaDeLavar.vhd
 - Implementa uma FSM com 8 estados: `inicial`, `enchimento1`, `lavagem`, `drenagem`, `enchimento2`, `enxague`, `drenagem2`, `centrifugacao`.
@@ -46,6 +69,15 @@ Este projeto implementa uma máquina de lavar automática utilizando VHDL, compo
 
 ## Máquina de Estados (FSM)
 
+## Fluxo de Dados e Controle
+
+O controle do sistema é centralizado na FSM, que recebe sinais dos sensores e botões, decide o próximo estado e ativa os módulos necessários. O temporizador atua como "relógio" das etapas, e os sinais de fim de enchimento/drenagem/tempo são usados para garantir que cada etapa só termina quando realmente concluída.
+
+**Exemplo de fluxo:**
+1. Usuário pressiona `prox` → FSM vai para enchimento.
+2. Sensor de água indica nível suficiente → FSM ativa lavagem.
+3. Temporizador termina → FSM ativa drenagem, e assim por diante.
+
 - FSM com 8 estados principais.
 - Transições ocorrem por eventos: botão `prox`, sensores, fim de temporização.
 - Cada estado define quais módulos estão ativos e quais sinais são enviados.
@@ -62,6 +94,15 @@ Este projeto implementa uma máquina de lavar automática utilizando VHDL, compo
 
 ## Testbenches
 
+## Testabilidade e Validação
+
+O sistema foi projetado para ser facilmente testável em simulação (testbenches) e em hardware. Cada módulo pode ser testado isoladamente. O testbench principal simula um ciclo completo, validando transições de estado, resposta a sensores e robustez do controle.
+
+**Validação:**
+- Testes de todos os estados e transições.
+- Testes de condições de erro (ex: sensor falho, botão pressionado fora de hora).
+- Verificação visual pelo display e sinais de saída.
+
 - `tb_MaquinaDeLavar.vhd` simula o funcionamento do sistema, aplicando estímulos nos sinais de entrada e observando as saídas.
 - Testa transições de estado, resposta a sensores e botões.
 
@@ -76,6 +117,27 @@ Este projeto implementa uma máquina de lavar automática utilizando VHDL, compo
 - Pode ser sintetizado e testado em hardware real.
 
 ## Robustez e Segurança
+
+## Reflexão Crítica e Possíveis Melhorias
+
+**Desafios enfrentados:**
+- Garantir sincronização entre módulos.
+- Definir tempos realistas para simulação.
+- Modularizar sem perder desempenho.
+
+**Possíveis melhorias:**
+- Adicionar sensores analógicos para níveis intermediários de água.
+- Implementar interface serial para configuração de ciclos.
+- Adicionar proteção contra falhas de energia (memória não-volátil).
+- Permitir múltiplos ciclos de enxágue ou modos customizados.
+
+**Comparação com sistemas reais:**
+O modelo abstrai detalhes mecânicos e hidráulicos, mas segue o fluxo lógico de máquinas reais. Em sistemas industriais, haveria mais sensores, redundância e protocolos de segurança, mas a lógica central seria similar.
+
+**Lições aprendidas:**
+- Importância da FSM para controle seguro.
+- Valor da modularização para manutenção e testes.
+- Como simular sistemas embarcados complexos em ambiente digital.
 
 - O sistema só avança de estado se as condições corretas forem atendidas.
 - Reset inicial garante partida segura.
